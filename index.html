@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Prep List</title>
+  <meta name="description" content="Grocery lists and meal prep planning">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Prep List">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <main id="views">
+    <section class="view" id="view-plan" data-title="Meal Plan"></section>
+    <section class="view" id="view-list" data-title="Grocery List"></section>
+    <section class="view" id="view-recipes" data-title="Recipes"></section>
+    <section class="view" id="view-saved" data-title="Saved"></section>
+    <section class="view" id="view-more" data-title="More"></section>
+  </main>
+
+  <header class="nav" id="nav">
+    <div class="nav-inner">
+      <div class="nav-side left" id="nav-left"></div>
+      <div class="nav-title" id="nav-title"></div>
+      <div class="nav-side right" id="nav-right"></div>
+    </div>
+  </header>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab" data-tab="plan" aria-label="Meal Plan">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><rect x="5" y="6" width="18" height="17" rx="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 11h18M10 3.5v5M18 3.5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="16" r="1.4" fill="currentColor"/><circle cx="14" cy="16" r="1.4" fill="currentColor"/><circle cx="18" cy="16" r="1.4" fill="currentColor"/></svg>
+      <span>Plan</span>
+    </button>
+    <button class="tab" data-tab="list" aria-label="Grocery List">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="7" cy="8" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="7" cy="15" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="7" cy="22" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13 8h11M13 15h11M13 22h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>List</span>
+    </button>
+    <button class="tab" data-tab="recipes" aria-label="Recipes">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M5 14h18a9 9 0 0 1-18 0Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 10c0-2 2-2 2-4M15 10c0-2 2-2 2-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+      <span>Recipes</span>
+    </button>
+    <button class="tab" data-tab="saved" aria-label="Saved">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M8 4.5h12a1.5 1.5 0 0 1 1.5 1.5v18l-7.5-5-7.5 5V6A1.5 1.5 0 0 1 8 4.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      <span>Saved</span>
+    </button>
+    <button class="tab" data-tab="more" aria-label="More">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="7" cy="14" r="2.2" fill="currentColor"/><circle cx="14" cy="14" r="2.2" fill="currentColor"/><circle cx="21" cy="14" r="2.2" fill="currentColor"/></svg>
+      <span>More</span>
+    </button>
+  </nav>
+
+  <div id="sheet-root"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
