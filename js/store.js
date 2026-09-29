@@ -1,35 +1,40 @@
 // Local storage for everything. No account, no server.
+import { SEED_TEMPLATES, defaultWeekDays } from './templates.js';
+import { mondayOf } from './week.js';
+
 const KEY = 'preplist.v1';
 
 export const DEFAULT_STORES = ['Harris Teeter', 'Kroger', 'Walmart', 'Aldi', 'Food Lion', 'Costco'];
 
-export function defaultPlan() {
-  return {
-    name: 'My Meal Plan',
-    days: 5,
-    people: 1,
-    mealsPerDay: 3,
-    kcal: 2200,
-    protein: null,
-    proteinMin: true,
-    carbs: null,
-    fat: null,
-    items: [
-      { foodId: 'chicken-thigh', share: 30 },
-      { foodId: 'white-rice', share: 30 },
-      { foodId: 'broccoli', share: 5 },
-      { foodId: 'greek-yogurt', share: 12 },
-      { foodId: 'eggs', share: 15 },
-    ],
-    savedId: null,
-  };
+export function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+export function clone(o) {
+  return JSON.parse(JSON.stringify(o));
+}
+
+export function newWeek(start, days) {
+  return { id: uid(), start, days: days || emptyDays(), listId: null, prepDone: {}, closed: false, createdAt: Date.now() };
+}
+export function emptyDays() {
+  return Array.from({ length: 7 }, () => ({ breakfast: { t: null }, lunch: { t: null }, dinner: { t: null } }));
 }
 
 function defaults() {
+  const week = newWeek(mondayOf(new Date()), defaultWeekDays());
   return {
-    version: 1,
+    version: 2,
     settings: {
       units: 'imperial',
+      kcal: 2200,
+      protein: 160,
+      people: 1,
+      split: { breakfast: 25, lunch: 35, dinner: 40 },
+      prepMode: 'once',
+      containers: 8,
+      containerOz: 30,
+      fridgeDays: 4,
+      currentStore: '',
       usdaKey: '',
       proxyUrl: '',
       proxyToken: '',
@@ -39,19 +44,50 @@ function defaults() {
       stores: DEFAULT_STORES.slice(),
       priceStore: '',
       subtractPantry: true,
-      fridgeDays: 4,
       a2hsDismissed: false,
     },
-    plan: defaultPlan(),
-    recipe: null,
+    templates: clone(SEED_TEMPLATES),
+    weeks: [week],
+    currentWeekId: week.id,
     customFoods: [],
-    saved: [],
     lists: [],
     activeListId: null,
     pantry: [],
     prices: {},
-    ui: { tab: 'plan', savedFilter: 'all' },
+    storeOrders: {},
+    trips: [],
+    saved: [],
+    ui: { tab: 'week' },
   };
+}
+
+function mergeState(d, s) {
+  const out = { ...d, ...s };
+  out.settings = { ...d.settings, ...(s.settings || {}) };
+  out.settings.split = { ...d.settings.split, ...((s.settings && s.settings.split) || {}) };
+  out.ui = { ...d.ui, ...(s.ui || {}) };
+  for (const k of ['customFoods', 'saved', 'lists', 'pantry', 'templates', 'weeks', 'trips']) if (!Array.isArray(out[k])) out[k] = d[k];
+  for (const k of ['prices', 'storeOrders']) if (!out[k] || typeof out[k] !== 'object') out[k] = {};
+  if (!(s.version >= 2)) {
+    // Upgrade from version 1: new weekly loop, keep lists, prices, pantry, custom foods.
+    out.version = 2;
+    out.templates = d.templates;
+    out.weeks = d.weeks;
+    out.currentWeekId = d.currentWeekId;
+    out.ui = { tab: 'week' };
+    if (s.settings && s.settings.fridgeDays) out.settings.fridgeDays = s.settings.fridgeDays;
+    if (s.plan && s.plan.kcal) out.settings.kcal = s.plan.kcal;
+    if (s.plan && s.plan.protein) out.settings.protein = s.plan.protein;
+    out.upgradedFromV1 = true;
+    delete out.plan;
+    delete out.recipe;
+  }
+  if (!out.weeks.length) {
+    const w = newWeek(mondayOf(new Date()), defaultWeekDays());
+    out.weeks = [w];
+    out.currentWeekId = w.id;
+  }
+  return out;
 }
 
 function load() {
@@ -59,22 +95,11 @@ function load() {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return d;
-    const s = JSON.parse(raw);
-    return mergeState(d, s);
+    return mergeState(d, JSON.parse(raw));
   } catch (e) {
     console.warn('Could not read saved data', e);
     return d;
   }
-}
-
-function mergeState(d, s) {
-  const out = { ...d, ...s };
-  out.settings = { ...d.settings, ...(s.settings || {}) };
-  out.ui = { ...d.ui, ...(s.ui || {}) };
-  out.plan = s.plan ? { ...defaultPlan(), ...s.plan } : d.plan;
-  for (const k of ['customFoods', 'saved', 'lists', 'pantry']) if (!Array.isArray(out[k])) out[k] = [];
-  if (!out.prices || typeof out.prices !== 'object') out.prices = {};
-  return out;
 }
 
 export const state = load();
@@ -96,18 +121,10 @@ export function save(now = false) {
 window.addEventListener('pagehide', () => save(true));
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(true); });
 
-export function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
-export function clone(o) {
-  return JSON.parse(JSON.stringify(o));
-}
-
 export async function requestPersist() {
   try {
     if (navigator.storage && navigator.storage.persist) {
-      const already = await navigator.storage.persisted();
-      if (already) return true;
+      if (await navigator.storage.persisted()) return true;
       return await navigator.storage.persist();
     }
   } catch (e) { /* not supported */ }

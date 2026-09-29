@@ -116,3 +116,13 @@ export async function krogerProducts(term, locationId) {
   const res = await proxyFetch(`/kroger/products?term=${encodeURIComponent(term)}&locationId=${encodeURIComponent(locationId)}`);
   return res.json();
 }
+
+/** Read a receipt photo through the proxy (Claude vision). Returns { store, lines: [{ item, text, price }] }. */
+export async function scanReceipt(imageBase64, mediaType, itemNames) {
+  const res = await proxyFetch('/receipt', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: imageBase64, mediaType, items: itemNames }),
+  });
+  return res.json();
+}

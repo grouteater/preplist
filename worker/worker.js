@@ -6,6 +6,8 @@
 //                                schema.org Recipe data (browsers block this with CORS).
 //   POST /parse  {text}          Sends messy recipe text to the Anthropic API and returns
 //                                clean JSON. Your API key stays here, never in the app.
+//   POST /receipt {image,...}    Reads a receipt photo (Claude vision) and matches lines to
+//                                items on your list so the app can log what you paid.
 //   GET  /kroger/locations?zip=  Finds Kroger-family stores (Kroger, Harris Teeter, ...).
 //   GET  /kroger/products?term=&locationId=
 //                                Live shelf prices for one store (needs a client secret).
@@ -13,7 +15,7 @@
 // Secrets and variables (set in the Cloudflare dashboard, Settings > Variables and Secrets):
 //   APP_TOKEN            required. Any long random string. Paste the same value in the app.
 //   ALLOWED_ORIGIN       recommended. Your site, e.g. https://yourname.github.io
-//   ANTHROPIC_API_KEY    optional. Enables /parse.
+//   ANTHROPIC_API_KEY    optional. Enables /parse and /receipt.
 //   ANTHROPIC_MODEL      optional. Defaults to claude-haiku-4-5-20251001.
 //   KROGER_CLIENT_ID     optional. Enables /kroger/*.
 //   KROGER_CLIENT_SECRET optional.
@@ -43,6 +45,7 @@ export default {
       }
       if (url.pathname === '/fetch' && request.method === 'GET') return await fetchPage(url, cors);
       if (url.pathname === '/parse' && request.method === 'POST') return await parseRecipe(request, env, cors);
+      if (url.pathname === '/receipt' && request.method === 'POST') return await readReceipt(request, env, cors);
       if (url.pathname === '/kroger/locations') return await krogerLocations(url, env, cors);
       if (url.pathname === '/kroger/products') return await krogerProducts(url, env, cors);
       return json({ error: 'Not found' }, 404, cors);
@@ -139,6 +142,56 @@ async function parseRecipe(request, env, cors) {
     return json(JSON.parse(out.slice(start, end + 1)), 200, cors);
   } catch (e) {
     return json({ error: 'The AI reply could not be read. Try again.' }, 502, cors);
+  }
+}
+
+/* ---------- Receipt reading ---------- */
+const RECEIPT_PROMPT = `You read grocery receipt photos for a shopping list app.
+
+Return ONLY a JSON object, no prose:
+{"store": string, "lines": [{"text": string, "price": number, "item": string|null}]}
+
+Rules:
+- One entry per purchased product line. Skip tax, subtotal, total, payment, savings summary, and bag fee lines.
+- price is the final amount paid for that line after any per-line discount, as a number.
+- text is the receipt's own abbreviation, e.g. "HT CHKN THGH BNLS".
+- item is the exact name from the provided shopping list that this line is, or null if none match. Never invent a list item.
+- store is the store name printed on the receipt, or "".
+- If the photo is not a receipt or is unreadable, return {"store": "", "lines": []}.`;
+
+async function readReceipt(request, env, cors) {
+  if (!env.ANTHROPIC_API_KEY) return json({ error: 'Receipt reading needs ANTHROPIC_API_KEY on the Worker.' }, 501, cors);
+  const body = await request.json().catch(() => ({}));
+  const image = String(body.image || '');
+  if (!image || image.length > 7_000_000) return json({ error: 'Missing or oversized image.' }, 400, cors);
+  const items = Array.isArray(body.items) ? body.items.slice(0, 150).map(String) : [];
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+    body: JSON.stringify({
+      model: env.ANTHROPIC_VISION_MODEL || env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001',
+      max_tokens: 3000,
+      system: RECEIPT_PROMPT,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: body.mediaType || 'image/jpeg', data: image } },
+          { type: 'text', text: 'Shopping list items:\n' + items.map((i) => '- ' + i).join('\n') },
+        ],
+      }],
+    }),
+  });
+  if (!res.ok) return json({ error: `Anthropic API error ${res.status}: ${(await res.text()).slice(0, 200)}` }, 502, cors);
+  const data = await res.json();
+  const out = (data.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('');
+  const a = out.indexOf('{');
+  const b = out.lastIndexOf('}');
+  try {
+    const parsed = JSON.parse(out.slice(a, b + 1));
+    parsed.lines = (parsed.lines || []).filter((l) => typeof l.price === 'number' && l.price > 0).map((l) => ({ ...l, item: items.includes(l.item) ? l.item : null }));
+    return json(parsed, 200, cors);
+  } catch (e) {
+    return json({ error: 'Could not read that receipt. Try a flatter, well lit photo.' }, 502, cors);
   }
 }
 

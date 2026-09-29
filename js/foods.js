@@ -72,7 +72,7 @@ export const BUILTIN_FOODS = [
   { id: 'bell-pepper', name: 'Bell pepper', short: 'Bell peppers', section: 'produce', role: 'veg', basis: 'raw', kcal: 31, p: 1, c: 6, f: 0.3, yield: 1, aliases: ['bell pepper', 'red pepper', 'green pepper'], unit: { name: 'pepper', plural: 'peppers', g: 160 }, gPerCup: 149 },
   { id: 'onion', name: 'Yellow onion', short: 'Onions', section: 'produce', role: 'veg', basis: 'raw', kcal: 40, p: 1.1, c: 9.3, f: 0.1, yield: 1, aliases: ['onion'], unit: { name: 'onion', plural: 'onions', g: 150 }, gPerCup: 160 },
   { id: 'garlic', name: 'Garlic', short: 'Garlic', section: 'produce', role: 'other', basis: 'raw', kcal: 149, p: 6.4, c: 33, f: 0.5, yield: 1, aliases: ['garlic', 'garlic clove'], unit: { name: 'head', plural: 'heads', g: 40 }, clove: 4, gPerCup: 136 },
-  { id: 'potato', name: 'Russet potatoes', short: 'Potatoes', section: 'produce', role: 'carb', basis: 'raw', kcal: 79, p: 2.1, c: 18.1, f: 0.1, yield: 0.85, cook: 'baked', aliases: ['potato', 'russet'], pkgs: [{ label: '5 lb bag', g: 5 * LB }], unit: { name: 'potato', plural: 'potatoes', g: 213 } },
+  { id: 'potato', name: 'Russet potatoes', short: 'Potatoes', section: 'produce', role: 'carb', basis: 'raw', kcal: 79, p: 2.1, c: 18.1, f: 0.1, yield: 0.85, cook: 'baked', aliases: ['potato', 'russet'], loose: true, pkgs: [{ label: '5 lb bag', g: 5 * LB }], unit: { name: 'potato', plural: 'potatoes', g: 213 } },
   { id: 'sweet-potato', name: 'Sweet potatoes', short: 'Sweet potatoes', section: 'produce', role: 'carb', basis: 'raw', kcal: 86, p: 1.6, c: 20.1, f: 0.1, yield: 0.95, cook: 'baked', aliases: ['sweet potato', 'yam'], loose: true, unit: { name: 'sweet potato', plural: 'sweet potatoes', g: 130 } },
   { id: 'banana', name: 'Bananas', short: 'Bananas', section: 'produce', role: 'fruit', basis: 'peeled', kcal: 89, p: 1.1, c: 22.8, f: 0.3, yield: 1, aliases: ['banana'], unit: { name: 'banana', plural: 'bananas', g: 118, show: true } },
   { id: 'apple', name: 'Apples', short: 'Apples', section: 'produce', role: 'fruit', basis: 'raw', kcal: 52, p: 0.3, c: 13.8, f: 0.2, yield: 1, aliases: ['apple'], unit: { name: 'apple', plural: 'apples', g: 182, show: true } },
@@ -83,8 +83,54 @@ export const BUILTIN_FOODS = [
 
   // Frozen
   { id: 'frozen-veg', name: 'Frozen mixed vegetables', short: 'Frozen mixed veg', section: 'frozen', role: 'veg', basis: 'as sold', kcal: 64, p: 2.9, c: 13.3, f: 0.5, yield: 1, aliases: ['mixed vegetable', 'frozen vegetable'], pkgs: [{ label: '12 oz bag', g: 12 * OZ }, { label: '2 lb bag', g: 2 * LB }], gPerCup: 135 },
+  { id: 'chicken-tenders', name: 'Breaded chicken tenders (frozen)', short: 'Frozen chicken tenders', section: 'frozen', role: 'protein', basis: 'as sold', kcal: 240, p: 15, c: 16, f: 12.5, yield: 1, aliases: ['chicken tender', 'chicken strip', 'chicken nugget'], pkgs: [{ label: '25 oz bag', g: 25 * OZ }, { label: '40 oz bag', g: 40 * OZ }], unit: { name: 'tender', plural: 'tenders', g: 42, show: true } },
+  { id: 'fries', name: 'Frozen french fries', short: 'Frozen fries', section: 'frozen', role: 'carb', basis: 'as sold', kcal: 150, p: 2.3, c: 23, f: 5.6, yield: 1, aliases: ['french fry', 'fries', 'tater tot'], pkgs: [{ label: '32 oz bag', g: 2 * LB }] },
+  { id: 'frozen-pizza', name: 'Frozen pizza, 12 inch', short: 'Frozen pizza', section: 'frozen', role: 'carb', basis: 'as sold', kcal: 265, p: 11, c: 30, f: 11, yield: 1, aliases: ['frozen pizza', 'pizza'], pkgs: [{ label: '12 in pizza', g: 560 }], unit: { name: 'slice', plural: 'slices', g: 93, show: true } },
+  { id: 'potstickers', name: 'Frozen potstickers / dumplings', short: 'Frozen potstickers', section: 'frozen', role: 'carb', basis: 'as sold', kcal: 210, p: 8, c: 27, f: 7, yield: 1, aliases: ['potsticker', 'dumpling', 'gyoza'], pkgs: [{ label: '24 oz bag', g: 24 * OZ }], unit: { name: 'potsticker', plural: 'potstickers', g: 28, show: true } },
+  { id: 'marinara', name: 'Marinara sauce', short: 'Marinara', section: 'pantry', role: 'other', basis: 'as sold', kcal: 50, p: 1.4, c: 8, f: 1.5, yield: 1, aliases: ['marinara', 'pasta sauce', 'tomato sauce', 'spaghetti sauce'], pkgs: [{ label: '24 oz jar', g: 24 * OZ }], gPerCup: 250 },
+  { id: 'salsa', name: 'Salsa', short: 'Salsa', section: 'pantry', role: 'other', basis: 'as sold', kcal: 36, p: 1.5, c: 7, f: 0.2, yield: 1, aliases: ['salsa'], pkgs: [{ label: '16 oz jar', g: LB }], gPerCup: 260 },
+  { id: 'salad-greens', name: 'Salad greens', short: 'Salad greens', section: 'produce', role: 'veg', basis: 'raw', kcal: 17, p: 1.5, c: 3, f: 0.2, yield: 1, aliases: ['salad', 'lettuce', 'mixed green', 'romaine'], pkgs: [{ label: '5 oz clamshell', g: 5 * OZ }], gPerCup: 47 },
   { id: 'frozen-berries', name: 'Frozen mixed berries', short: 'Frozen berries', section: 'frozen', role: 'fruit', basis: 'as sold', kcal: 50, p: 0.7, c: 12, f: 0.3, yield: 1, aliases: ['frozen berry', 'mixed berry'], pkgs: [{ label: '16 oz bag', g: LB }, { label: '3 lb bag', g: 3 * LB }], gPerCup: 140 },
 ];
+
+// How to cook each food on prep day. {cups} and {water} are filled in from the amount.
+// min = total minutes. temp for ovens and air fryers.
+export const COOK = {
+  'chicken-thigh': { how: 'Oven', temp: '425°F', min: 25, text: 'Season, spread on a lined sheet pan, and roast until 165°F inside.', alt: 'Air fryer: 380°F for 18 to 20 min, flip halfway.' },
+  'chicken-breast': { how: 'Oven', temp: '425°F', min: 22, text: 'Season, roast on a lined sheet pan until 165°F inside. Rest 5 min before slicing.', alt: 'Air fryer: 380°F for 16 to 18 min.' },
+  'ground-beef-90': { how: 'Skillet', min: 12, text: 'Brown over medium high, breaking it up, until no pink remains (160°F). Season.' },
+  'ground-beef-80': { how: 'Skillet', min: 12, text: 'Brown over medium high, breaking it up, until no pink remains (160°F). Drain the fat.' },
+  'ground-turkey': { how: 'Skillet', min: 12, text: 'Brown over medium high with a little oil, breaking it up, until 165°F. Season.' },
+  'salmon': { how: 'Oven', temp: '400°F', min: 14, text: 'Season and bake until it flakes and reads 145°F.', alt: 'Air fryer: 390°F for 9 to 10 min.' },
+  'tilapia': { how: 'Oven', temp: '400°F', min: 12, text: 'Season and bake until it flakes (145°F).' },
+  'shrimp': { how: 'Skillet', min: 6, text: 'Thaw, pat dry, and sear 2 min per side until pink.' },
+  'tofu': { how: 'Air fryer', temp: '400°F', min: 20, text: 'Press 10 min, cube, toss with oil and cornstarch, air fry 15 min shaking halfway.' },
+  'eggs': { how: 'Stovetop', min: 20, text: 'Hard boil: cover with cold water, bring to a boil, cover and take off heat for 11 min, then ice bath.' },
+  'white-rice': { how: 'Stovetop', min: 30, water: 1.5, text: 'Rinse {cups} cups rice. Boil {water} cups water, add rice, cover and simmer on low 18 min, then rest 10 min. A rice cooker works with the same water.' },
+  'brown-rice': { how: 'Stovetop', min: 50, water: 2, text: 'Rinse {cups} cups rice. Boil {water} cups water, add rice, cover and simmer 45 min, then rest 5 min.' },
+  'quinoa': { how: 'Stovetop', min: 22, water: 2, text: 'Rinse {cups} cups quinoa. Simmer in {water} cups water, covered, 15 min. Rest 5 min and fluff.' },
+  'lentils': { how: 'Stovetop', min: 25, water: 3, text: 'Rinse {cups} cups lentils. Simmer uncovered in {water} cups water 20 to 25 min until tender, then drain.' },
+  'pasta': { how: 'Stovetop', min: 15, text: 'Boil in well salted water 9 to 11 min. Drain and toss with a little oil so it does not clump in the containers.' },
+  'potato': { how: 'Oven', temp: '425°F', min: 35, text: 'Cut into 1 inch cubes, toss with oil and salt, roast, flipping halfway.' },
+  'sweet-potato': { how: 'Oven', temp: '425°F', min: 30, text: 'Cut into 1 inch cubes, toss with oil and salt, roast, flipping halfway.' },
+  'broccoli': { how: 'Oven', temp: '425°F', min: 18, text: 'Cut into florets, toss with oil and salt, roast until the edges brown.', alt: 'Or steam 5 min for softer broccoli.' },
+  'green-beans': { how: 'Oven', temp: '425°F', min: 15, text: 'Trim, toss with oil and salt, roast until blistered.' },
+  'carrots': { how: 'Oven', temp: '425°F', min: 25, text: 'Cut into coins, toss with oil and salt, roast.' },
+  'bell-pepper': { how: 'Skillet', min: 8, text: 'Slice and saute with a little oil until soft.' },
+  'onion': { how: 'Skillet', min: 8, text: 'Slice and saute until soft.' },
+  'frozen-veg': { how: 'Microwave', min: 6, text: 'Steam in the bag or microwave covered until hot.' },
+  'black-beans': { how: 'Stovetop', min: 5, text: 'Rinse, drain, and warm with a pinch of cumin and salt.' },
+  'spinach': { how: 'No cook', min: 0, text: 'Add raw to containers; it wilts when you reheat.' },
+};
+
+// Grams per cup of the food once cooked or ready to eat. Used to check container fit.
+export const READY_G_PER_CUP = {
+  'chicken-thigh': 140, 'chicken-breast': 140, 'ground-beef-90': 150, 'ground-beef-80': 150, 'ground-turkey': 150, salmon: 140, tilapia: 140, shrimp: 145, tofu: 150,
+  eggs: 136, 'white-rice': 158, 'brown-rice': 195, quinoa: 185, lentils: 198, pasta: 140, potato: 150, 'sweet-potato': 150, broccoli: 156, 'green-beans': 125,
+  carrots: 156, 'bell-pepper': 150, onion: 160, 'frozen-veg': 180, 'black-beans': 172, spinach: 30, 'greek-yogurt': 245, 'milk-2': 244, oats: 81,
+};
+
+for (const f of BUILTIN_FOODS) if (COOK[f.id]) f.cookHow = COOK[f.id];
 
 export function makeFoodIndex(customFoods) {
   const map = new Map();

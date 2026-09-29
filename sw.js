@@ -1,6 +1,6 @@
 // Service worker: caches the app shell so it works offline.
 // Bump VERSION whenever you change any app file, so phones pick up the update.
-const VERSION = 'preplist-v1.0.0';
+const VERSION = 'preplist-v2.0.0';
 const SHELL = [
   './',
   './index.html',
@@ -11,6 +11,8 @@ const SHELL = [
   './js/engine.js',
   './js/ui.js',
   './js/api.js',
+  './js/week.js',
+  './js/templates.js',
   './manifest.json',
   './icons/apple-touch-icon.png',
   './icons/icon-192.png',

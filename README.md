@@ -1,28 +1,36 @@
 # Prep List
 
-A grocery list and meal prep planner for iPhone, styled like Apple Notes in dark mode. It is a static web app (plain HTML, CSS, and JavaScript, no framework, no build step) that runs on GitHub Pages and installs to your Home Screen. Everything is stored on your phone. No account.
+A weekly meal prep and grocery app for iPhone, styled like Apple Notes in dark mode. It is a static web app (plain HTML, CSS, and JavaScript, no framework, no build step) that runs on GitHub Pages and installs to your Home Screen. Everything is stored on your phone. No account.
 
 ---
 
-## 1. Feasibility summary
+## 1. How it works: the weekly loop
 
-### Works on GitHub Pages with no external services (Tier 1, built)
+**Plan, Shop, Prep, Eat, repeat.** The Week tab shows where you are in the loop and gives you one button for the next step.
 
-| Feature | Notes |
+| Tab | What it does |
 |---|---|
-| Meal plan builder | Pick foods, days, people, meals per day, calorie target. Sliders set each food's share of calories. Optional protein, carb, and fat targets with a **Fit to Macros** button that rebalances shares while holding calories fixed. |
-| Nutrition data | Built-in table of about 50 common foods, per 100 g **as purchased** (raw meat, dry rice, dry pasta) with a cooked-yield factor, so the app tells you what to buy and roughly what it weighs cooked. |
-| Grocery list | Notes-style checklist, grouped by store section, collapsible. Checked items turn gray, strike through, and animate to the bottom. Swipe left to delete, tap to edit, manual items. |
-| Package rounding | Rounds up to real package sizes (can mix two sizes, like "5 lb bag + 2 lb bag"), shows leftover amount and "covers N days at 2,200 kcal/day". Loose produce rounds to 0.25 lb. |
-| Recipes | Local parser for pasted ingredient lists (fractions, ranges, units, "1 (15 oz) can"). Portion for N people as one meal or a meal prep batch for X days, optional calories per serving, or one tap to match your plan's calories per meal. |
-| Saved library | Save plans and recipes, retweak days, people, or calories, and combine several into one merged list (duplicates summed). Mark staples for a one-tap weekly list. |
-| Pricing (honest version) | Log the price you paid per item per store (per package, per lb, per kg, or each). The app remembers the last price per store and builds list totals, a store comparison, and a "cheapest protein" ranking from your own data only. |
-| Extras | Pantry subtraction, per-day macro summary, per-meal portions, prep-day schedule (based on fridge life), imperial and metric toggle, text export for Messages or Notes, JSON backup and restore, Add to Home Screen prompt, offline via service worker. |
+| **Week** | Seven days, three slots each. Breakfast is usually cook fresh, lunch is prepped, dinner can be prepped, cook fresh, easy (oven or air fryer), or eating out. Pick a meal for one day, Mon to Fri, or every day at once. Every meal resizes to its share of your daily calories (default split 25 / 35 / 40). Shows each day's calories and protein, how many of your 8 containers each prep session uses, and which prepped meals must go in the freezer. |
+| **Shop** | One list for the whole week, rounded to real package sizes, grouped by section, with pantry leftovers subtracted. **Start Shopping** keeps the screen on, flattens the list into the order you walked that store last time (it learns the aisle layout from the order you check things off), and pops up a quick price field each time you check an item. Quick add understands "milk, 2 lb ground turkey, paper towels". **Finish Trip** saves the trip for the Store Scorecard. |
+| **Prep** | A cook plan for prep day: preheat and setup, every cooking step with amounts (for example "Rinse 2½ cups rice, boil 3¾ cups water"), start times so everything finishes together, oven sharing, and one tap timers that beep and stay visible on every tab. Then a portion card per meal (cooked grams per container), a check that it fits your 30 oz containers, and a label list telling you which containers go in the fridge and which go in the freezer. Supports prepping once (Sunday) or twice (Sunday and Wednesday). |
+| **Meals** | Your meal library: 15 starter meals (5 prepped lunches, 4 breakfasts including overnight oats, 3 easy air fryer or oven dinners, 3 cook fresh dinners). Edit ingredients per serving, mark a meal as prepped, cook fresh, or easy, and set cooking method, temperature, and time. Import recipes from pasted text, a link (proxy), or an AI description (proxy). |
+| **More** | Container count and size, fridge days before freezing, pantry, stores, Store Scorecard, cheapest protein, custom foods, USDA search, the optional proxy, backup and restore. |
+
+**The pantry runs itself.** Checking an item off adds what you bought to the pantry. **Start Next Week** subtracts what the week's meals used, shows you what should be left so you can correct it, and optionally repeats the same meals. The next list only buys the difference, so half a bag of rice carries over automatically.
+
+**Undecided on a store?** Shop in shopping mode at a few stores and log prices as you check items off (or scan the receipt). The Store Scorecard compares them using only your real numbers. Aisle order, prices, and totals are all kept per store.
+
+### Honesty notes
+- Nutrition comes from rounded USDA values per 100 g as purchased (raw meat, dry rice), with cooked-yield factors for cooked weights. Estimates, not lab values.
+- Package sizes are typical US sizes and vary by store.
+- Prices are only what you log, read from your receipt photo, or fetch live from Kroger. Never invented.
+- Food safety: cooked food is planned for about 4 days in the fridge (USDA guidance is 3 to 4), then the freezer. Overnight oats are never planned for the freezer.
 
 ### Needs the optional proxy (Tier 2, built, off by default)
 
 | Feature | Why it needs a server |
 |---|---|
+| Receipt scanning | Photo of your receipt, read by Claude through the Worker, matched to your list, and saved as prices after you review them. Uses the same Anthropic key as AI parsing. |
 | Import from a recipe link | Recipe sites do not send CORS headers, so Safari blocks a page on your site from reading them. The Worker fetches the page, then the app reads its schema.org Recipe JSON-LD. The app always tries a direct fetch first, and pasting text always works as a fallback. |
 | Parse with AI | Uses the Anthropic API for messy text or a plain description ("chicken burrito bowls for 4"). A key in client code would be public, so it only runs through the Worker. Default model is Claude Haiku 4.5, which is cheap for this. |
 | Live Kroger and Harris Teeter prices | Kroger's developer API is free and returns store-specific prices, including Harris Teeter (a Kroger banner). It uses a client secret, so it must go through the Worker. |
@@ -65,9 +73,11 @@ index.html            App shell and tab bar
 manifest.json         PWA manifest
 sw.js                 Service worker (offline cache)
 css/app.css           All styling (Apple Notes dark look)
-js/app.js             Views and actions
+js/app.js             Views and actions (Week, Shop, Prep, Meals, More)
+js/week.js            Weekly loop: meal scaling, week needs, prep sessions, containers, cook timeline
+js/templates.js       Starter meals and the default week
 js/engine.js          Math: plan scaling, macro fit, packages, list merge, recipe parsing, prices
-js/foods.js           Built-in food table (edit here to add foods for everyone)
+js/foods.js           Built-in food table, cooking steps, and ready-to-eat volumes
 js/store.js           Local storage, backup and restore
 js/ui.js              Sheets, swipe to delete, checklist animation, collapsing title
 js/api.js             USDA search and proxy calls
@@ -123,7 +133,7 @@ In the Worker, go to **Settings** then **Variables and Secrets**, and add each o
 |---|---|---|
 | `APP_TOKEN` | Secret | Any long random string. Make one by mashing the keyboard for 30+ characters. Required. |
 | `ALLOWED_ORIGIN` | Text | Your GitHub Pages origin, for example `https://yourname.github.io` (no path, no trailing slash). |
-| `ANTHROPIC_API_KEY` | Secret | Optional. From console.anthropic.com, **API Keys**. Enables Parse with AI. |
+| `ANTHROPIC_API_KEY` | Secret | Optional. From console.anthropic.com, **API Keys**. Enables Parse with AI and receipt scanning. |
 | `ANTHROPIC_MODEL` | Text | Optional. Defaults to `claude-haiku-4-5-20251001`. |
 | `KROGER_CLIENT_ID` | Secret | Optional. See 6c. |
 | `KROGER_CLIENT_SECRET` | Secret | Optional. See 6c. |
@@ -149,30 +159,27 @@ Click **Deploy** after adding them if the dashboard asks.
 
 ## 7. Test checklist on your phone
 
-- [ ] Install from Safari to the Home Screen. The app opens full screen with the black status bar and the icon looks right.
-- [ ] Plan tab: change Days, People, and Calories per day. Scroll down and the big title collapses into the nav bar.
-- [ ] Drag a food slider. Percentages, per-day amounts, and the daily summary update smoothly.
-- [ ] Enter a protein target, tap **Fit to Macros**, and check the summary shows the target met.
-- [ ] Add Food: search "oat" and add Oats. Swipe a food left to remove it.
-- [ ] Tap **Make Grocery List**. Items show package amounts, per-day portions, "covers N days", and leftovers, grouped by section.
-- [ ] Tap a circle: it fills yellow with a checkmark, the text grays and strikes through, and the row slides to the bottom of its section. Uncheck it and it returns to its original spot.
-- [ ] Collapse and expand a section. Swipe an item left to delete. Tap the compose button to add a manual item.
-- [ ] Tap an item, log a price at a store, and confirm the list shows an estimated total. Try **Compare Stores** from the list menu.
-- [ ] Recipes: paste an ingredient list, tap **Parse Text**, switch to **Meal prep batch**, set people and days, and tap **Use my plan**. Then **Add to Current List** and check duplicates merged.
-- [ ] Save the plan and the recipe. In Saved, tap **Select**, pick both, and make a combined list. Open a saved plan and change days before making a list.
-- [ ] More: switch to Metric and check the list converts. Add a pantry item, then **Recalculate** from the list menu.
-- [ ] Tap any input: the page should not zoom.
-- [ ] Turn on Airplane Mode, force-quit, and reopen the app. It should load and work (USDA and proxy features will say they cannot connect).
-- [ ] Export a backup, then Import it back.
-- [ ] If you set up the proxy: **Test Connection**, import a recipe link, try **Parse with AI** on a one-line description, and check a live Kroger price.
-
----
+- [ ] Open the app from the Home Screen. It starts on **This Week** with a starter plan.
+- [ ] Tap a lunch, choose **Mon to Fri**, and pick a different prepped meal. The Prep day card updates its container count.
+- [ ] Change calories per day. Day totals update and the list shows "out of date" if you already built one.
+- [ ] Switch **Twice a week** and back. Freezer notes appear or disappear on later lunches.
+- [ ] Tap **Build Shopping List**. Items show package amounts, leftovers, and which meals they are for.
+- [ ] Pick your store, tap **Start Shopping**. The screen stays on. Check an item: it fills yellow, grays out, drops to the bottom, and a price bar slides up. Save a price.
+- [ ] Type "paper towels, 2 lb ground turkey" in the add field.
+- [ ] Tap **Finish**. Next time you shop that store, the order follows how you walked it.
+- [ ] Prep tab: start a timer, switch tabs, and confirm it keeps counting at the top and beeps when done (turn the ringer switch off silent).
+- [ ] Portion cards show cooked grams per container and warn if a meal will overfill your 30 oz containers.
+- [ ] Meals tab: edit a meal, change an amount, save. Import a recipe by pasting its ingredient list.
+- [ ] **Start Next Week** from the Week menu: review leftovers, keep "Repeat this week's meals" on, and confirm the new list skips what you still have.
+- [ ] Airplane Mode, force-quit, reopen: everything works offline.
+- [ ] More: Export a backup to Files.
 
 ## 8. Customizing
 
 - **Add or fix built-in foods:** edit `js/foods.js`. Nutrition is per 100 g as purchased. `yield` is cooked weight divided by purchased weight. `pkgs` lists package sizes in grams.
 - **Colors and spacing:** CSS variables at the top of `css/app.css`.
-- **Default plan:** `defaultPlan()` in `js/store.js`.
+- **Starter meals and default week:** `js/templates.js`.
+- **Cooking steps:** the `COOK` table in `js/foods.js`.
 - Remember to bump `VERSION` in `sw.js` after any change.
 
 Nutrition values are rounded from USDA FoodData Central and are estimates. Package sizes are typical US sizes and vary by store.

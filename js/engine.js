@@ -261,11 +261,15 @@ export function pickPackage(food, g, units) {
   for (const c of cands) {
     const count = c.parts.reduce((x, p) => x + p[0], 0);
     c.count = count;
-    c.score = c.total - g + Math.max(penalty, 0.05 * g) * count + (c.parts.length > 1 ? 0.15 * g : 0);
+    c.score = c.total - g + Math.max(penalty, 0.08 * g) * count + (c.parts.length > 1 ? 0.15 * g : 0);
     if (!best || c.score < best.score) best = c;
   }
   const text = best.parts.map(([n, p]) => (n === 1 ? p.label : `${n} × ${p.label}`)).join(' + ');
   return { text, grams: best.total, count: best.count, parts: best.parts.map(([n, p]) => ({ n, label: p.label, g: p.g })) };
+}
+
+function fmtSources(map) {
+  return 'For ' + [...map].map(([k, v]) => (v > 1 ? `${k} ×${v}` : k)).join(', ');
 }
 
 export function buildList(needs, { foods, pantry = [], subtract = true, units = 'imperial', name = 'Grocery List', uid }) {
@@ -273,11 +277,11 @@ export function buildList(needs, { foods, pantry = [], subtract = true, units = 
   for (const n of needs) {
     let m = merged.get(n.key);
     if (!m) {
-      m = { key: n.key, foodId: n.foodId, name: n.name, section: n.section, grams: null, perDay: 0, perDayOk: true, perMeal: n.perMeal ?? null, qty: null, unit: n.unit || '', sources: new Set(), rates: new Set(), count: 0 };
+      m = { key: n.key, foodId: n.foodId, name: n.name, section: n.section, grams: null, perDay: 0, perDayOk: true, perMeal: n.perMeal ?? null, qty: null, unit: n.unit || '', sources: new Map(), rates: new Set(), count: 0 };
       merged.set(n.key, m);
     }
     m.count++;
-    m.sources.add(n.source);
+    m.sources.set(n.source, (m.sources.get(n.source) || 0) + 1);
     if (n.grams != null) {
       m.grams = (m.grams || 0) + n.grams;
       if (n.perDay != null) m.perDay += n.perDay;
@@ -311,6 +315,10 @@ export function buildList(needs, { foods, pantry = [], subtract = true, units = 
         }
       }
       const pkg = pickPackage(food, need, units);
+      if (need <= 0.5 && !item.checked) {
+        item.checked = true;
+        pantryNote = pantryNote || 'Covered by what you have';
+      }
       item.needG = need;
       item.buyG = pkg ? pkg.grams : null;
       item.qty = pkg ? pkg.text : '';
@@ -335,14 +343,14 @@ export function buildList(needs, { foods, pantry = [], subtract = true, units = 
     } else {
       // Ingredient without a known weight: keep the recipe's own unit.
       item.qty = m.qty != null ? `${fmtQty(m.qty)}${m.unit ? ' ' + unitLabel(m.unit, m.qty) : ''}` : '';
-      item.detail = m.sources.size ? [`For ${[...m.sources].join(', ')}`] : [];
+      item.detail = m.sources.size ? [fmtSources(m.sources)] : [];
       const p = subtract ? pantry.find((x) => x.key === m.key || normName(x.name) === normName(m.name)) : null;
       if (p) {
         item.checked = true;
         item.detail.push('In your pantry');
       }
     }
-    if (m.sources.size > 1) item.detail.push(`For ${[...m.sources].join(', ')}`);
+    if (food && m.sources.size && (m.sources.size > 1 || [...m.sources.values()][0] > 1)) item.detail.push(fmtSources(m.sources));
     items.push(item);
   }
   return { id: uid(), name, createdAt: Date.now(), items, collapsed: {} };
